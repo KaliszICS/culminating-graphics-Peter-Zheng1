@@ -9,7 +9,7 @@
         * Date Last Modified: June 1, 2026
 
         */
-                        // IMPORTANT NOTE: PREVIOUS UPDATE WERE DONE ON "CULMINATING" Assingment.
+                        // IMPORTANT NOTE: PREVIOUS UPDATES WERE DONE ON "CULMINATING" Assingment.
                         // Instead of the "CULMINATING-GRAPHICS" Assignment. 
                         // New updates will be done on this assignment 
 
@@ -212,6 +212,10 @@ public class PracticeProblem extends Application {
 
         public void showWin(String message){
 
+        }
+
+        public void placeEnemyShips(){
+                
         }
         
 }
