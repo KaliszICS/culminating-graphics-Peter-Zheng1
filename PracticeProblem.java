@@ -206,16 +206,50 @@ public class PracticeProblem extends Application {
                 
 
         }
-        public void checkWin(char[][] board){
+        
+
+        public void placePlayerShip(int row, int col){
+                if (!setupMode) return; // exits if false
+
+
+
+
 
         }
+                public void placeEnemyShips(){  // placing enemy ships (randomized)
+                int count = 0;
+                while (count < 4){
+                        int r = rand.nextInt(SIZE);
+                        int c = rand.nextInt(SIZE);
 
-        public void showWin(String message){
-
+                        if (enemyBoard[r][c] == '~'){
+                                enemyBoard[r][c] = 'S';
+                                count++;
+                        }
+                }
         }
 
-        public void placeEnemyShips(){
-                
+        public boolean checkWin(char[][] board){ // checking if the player/enemy has won the game 
+                for (int r = 0; r < SIZE; r++){
+                        for (int c = 0; c < SIZE; c++){
+                                if (board[r][c] =='S'){
+                                        return false;
+                                }
+                        }
+                }
+                return true;
+        }
+
+        public void showWin(String message){ //Showing that the player won
+                title.setText(message);
+
+                for (int r = 0; r < SIZE; r++){
+                        for (int c = 0; c < SIZE; c++){
+                                playerButtons[r][c].setDisable(true);
+                                enemyButtons[r][c].setDisable(true);
+                        }
+                }
+                        
         }
         
 }
