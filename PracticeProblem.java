@@ -6,7 +6,7 @@
 
         * Date Created: May 26, 2026
 
-        * Date Last Modified: June 1, 2026
+        * Date Last Modified: June 3, 2026
 
         */
                         // IMPORTANT NOTE: PREVIOUS UPDATES WERE DONE ON "CULMINATING" Assingment.
@@ -54,10 +54,13 @@ public class PracticeProblem extends Application {
 
                 launch(args);
 	}
-
+        
         //------- Start (Game Setup)-------
         @Override
+      
         public void start(Stage stage){
+
+        System.out.println("Game Started");
 
         playerBoard = new char[SIZE][SIZE];
         enemyBoard = new char[SIZE][SIZE];
@@ -182,19 +185,19 @@ public class PracticeProblem extends Application {
                 if (setupMode) return; // if its still in setup mode, stop.
                 if (!playerTurn) return; // if not playerturn, stop.
 
-                if (enemyBoard[row][col] == 'X' || enemyBoard[row][col] == '0') return; // if
+                if (enemyBoard[row][col] == 'X' || enemyBoard[row][col] == 'O') return; // if
                 //  theres a x or 0 stop.
 
                 if (enemyBoard[row][col] == 'S') {
                         enemyBoard[row][col] = 'X';
                         enemyButtons[row][col].setText("X");
-                        enemyButtons[row][col].setStyle("-fx-background-color: lightblue;");
+                        enemyButtons[row][col].setStyle("-fx-background-color: red;"); // hit
                 }
 
                 else {
-                        enemyBoard[row][col] = '0';
-                        enemyButtons[row][col].setText("0");
-                        enemyButtons[row][col].setStyle("-fx-background-color: lightblue;");
+                        enemyBoard[row][col] = 'O';
+                        enemyButtons[row][col].setText("O");
+                        enemyButtons[row][col].setStyle("-fx-background-color: lightblue;"); // miss
                 }
 
                 if (checkWin(enemyBoard)) {
@@ -202,17 +205,56 @@ public class PracticeProblem extends Application {
                         return;
                 }
                 
-                playerTurn = false;
+                
+                enemyAttack();
+                playerTurn = true;
                 
 
+        }
+
+        public void enemyAttack(){
+                if (setupMode) return;
+                int row;
+                int col;
+
+                do { // picks random tile (not picked before)
+                        row = rand.nextInt(SIZE);
+                        col = rand.nextInt(SIZE);
+                } while (playerBoard[row][col] == 'X' || playerBoard[row][col] == 'O');
+
+                if (playerBoard[row][col] == 'S'){
+                        playerBoard[row][col] = 'X';
+                        playerButtons[row][col].setText("X");
+                        playerButtons[row][col].setStyle("-fx-background-color: red;");
+                }
+
+                else {
+                        playerBoard[row][col] = 'O';
+                        playerButtons[row][col].setText("O");
+                        playerButtons[row][col].setStyle("-fx-background-color: lightblue;");
+                }
+
+                if (checkWin(playerBoard)) {
+                        showWin("Enemy has won!");
+                        return;
+                }
+                playerTurn = true;
         }
         
 
         public void placePlayerShip(int row, int col){
                 if (!setupMode) return; // exits if false
 
+                if (playerBoard[row][col] == '~'){
+                        playerBoard[row][col] = 'S';
+                        playerButtons[row][col].setStyle("-fx-background-color: green;");
+                        shipsPlaced++;
+                }
 
-
+                if (shipsPlaced >= 4) {
+                        setupMode = false;
+                        title.setText("Start attacking!");
+                }
 
 
         }
