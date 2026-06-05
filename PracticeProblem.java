@@ -32,7 +32,7 @@ public class PracticeProblem extends Application {
 
 
         // Variables
-        int SIZE = 5;
+        int SIZE = 10;
 
         char[][] playerBoard;
         char[][] enemyBoard;
