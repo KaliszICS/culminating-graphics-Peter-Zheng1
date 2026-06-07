@@ -47,7 +47,8 @@ public class PracticeProblem extends Application {
 
         Random rand;
         Label title;
-        GridPane grid;
+        GridPane playerGrid;
+        GridPane enemyGrid;
 
         //starts javafx
 	public static void main(String args[]) {
@@ -76,7 +77,7 @@ public class PracticeProblem extends Application {
 
         initializeBoards();
         
-        grid = createGrid();
+        HBox boards = createGrid();
 
         title = new Label("Place 2 Ships (Length 2) on the left grid");
         title.setFont(new Font(16));
@@ -85,7 +86,9 @@ public class PracticeProblem extends Application {
         restartButn.setOnAction(e -> restartGame()); 
         // -> Lambda operator, used for nameless functions, takes input and does action
 
-        VBox root = new VBox(title, grid, restartButn);
+        VBox root = new VBox(title, boards, restartButn);
+        root.setAlignment(Pos.CENTER);
+        root.setSpacing(15);
         
         //javafx scenes/title
         Scene scene = new Scene(root, 600, 380);
@@ -97,88 +100,70 @@ public class PracticeProblem extends Application {
         }
 
         //------- Methods-------
-        public void restartGame(){ // restarts game
-                setupMode = true;
-                playerTurn = true;
-                shipsPlaced = 0;
 
-                playerBoard = new char[SIZE][SIZE];
-                enemyBoard = new char[SIZE][SIZE];
+        public HBox createGrid(){
 
-                initializeBoards();
+                playerGrid = new GridPane();
+                enemyGrid = new GridPane();
 
-                //resets text on buttons &  colors & styles (i.e: removes green, red, and blue)
+                playerGrid.setHgap(2);
+                playerGrid.setVgap(2);
+
+                enemyGrid.setHgap(2);
+                enemyGrid.setVgap(2);
+
+                // Player grid
+                for (int r = 0; r < SIZE; r++){
+                        for (int c = 0; c < SIZE; c++ ){
+                                Button butn = new Button();
+                                butn.setPrefSize(40, 40);
+
+                                int row = r;
+                                int col = c;
+
+                                butn.setOnAction(e -> placePlayerShip(row, col));
+
+                                playerButtons[r][c] = butn;
+                                playerGrid.add(butn, c, r);
+                        }
+                }
+
+                // Enemy grid
                 for (int r = 0; r < SIZE; r++){
                         for (int c = 0; c < SIZE; c++){
-                                playerButtons[r][c].setText("");
-                                playerButtons[r][c].setStyle("");
 
-                                enemyButtons[r][c].setText("");
-                                enemyButtons[r][c].setStyle("");
+                                Button butn = new Button();
+                                butn.setPrefSize(40, 40);
 
-                                //enables clicking again - removes clicking after you won so must be reset
-                                playerButtons[r][c].setDisable(false);
-                                enemyButtons[r][c].setDisable(false);
+                                int row = r;
+                                int col = c;
+
+                                butn.setOnAction(e -> attackEnemy(row, col));
+
+                                enemyButtons[r][c] = butn;
+                                enemyGrid.add(butn, c, r);
                         }
-
                 }
+                VBox left = new VBox(new Label("YOUR BOARD"), playerGrid);
+                VBox right = new VBox(new Label("ENEMY BOARD"), enemyGrid);
 
-                        title.setText("Place 2 ships (Length 2) on left grid");
+                left.setAlignment(Pos.CENTER);
+                right.setAlignment(Pos.CENTER);
 
-                        placeEnemyShips();
+                return new HBox(50, left, right);
         }
 
-        
-                //------- Initialize-------
-                public void initializeBoards(){
-                        for (int r = 0; r < SIZE; r++){
-                                for (int c = 0; c < SIZE; c++){
-                                        playerBoard[r][c] = '~';
-                                        enemyBoard[r][c] = '~';
-                                }
+
+        //------- Initialize-------
+        public void initializeBoards(){
+                for (int r = 0; r < SIZE; r++){
+                        for (int c = 0; c < SIZE; c++){
+                                playerBoard[r][c] = '~';
+                                enemyBoard[r][c] = '~';
                         }
                 }
-                //------- Grid -------
-
-                // Player Grid
-                public GridPane createGrid(){
-                        GridPane grid = new GridPane();
+        }
                 
-                        for (int r = 0; r < SIZE; r++){
-                                for (int c = 0; c < SIZE; c++){
-                                        Button butn = new Button();
-                                        butn.setPrefSize(40, 40);
-
-                                        int row = r;
-                                        int col = c;
-
-                                        butn.setOnAction(e -> placePlayerShip(row, col));
-
-                                        playerButtons[r][c] = butn;
-                                        grid.add(butn, c, r);
-                                }
-                        }
-
-                        // Enemy Grid
-                        for (int r = 0; r < SIZE; r++){
-                                for (int c = 0; c < SIZE; c++){
-
-                                        Button butn = new Button();
-                                        butn.setPrefSize(40, 40);
-
-                                        int row = r;
-                                        int col = c;
-
-                                        butn.setOnAction(e -> attackEnemy(row, col));
-
-                                        enemyButtons[r][c] = butn;
-                                        grid.add(butn, c + 7, r);
-
-                                }
-                        }
-                        return grid;
-
-                }
         // ------- player attacking ---------
         public void attackEnemy(int row, int col){
 
@@ -205,9 +190,8 @@ public class PracticeProblem extends Application {
                         return;
                 }
                 
-                
+                playerTurn = false;
                 enemyAttack();
-                playerTurn = true;
                 
 
         }
@@ -292,6 +276,37 @@ public class PracticeProblem extends Application {
                         }
                 }
                         
+        }
+
+          public void restartGame(){ // restarts game
+                setupMode = true;
+                playerTurn = true;
+                shipsPlaced = 0;
+
+                playerBoard = new char[SIZE][SIZE];
+                enemyBoard = new char[SIZE][SIZE];
+
+                initializeBoards();
+
+                //resets text on buttons &  colors & styles (i.e: removes green, red, and blue)
+                for (int r = 0; r < SIZE; r++){
+                        for (int c = 0; c < SIZE; c++){
+                                playerButtons[r][c].setText("");
+                                playerButtons[r][c].setStyle("");
+
+                                enemyButtons[r][c].setText("");
+                                enemyButtons[r][c].setStyle("");
+
+                                //enables clicking again - removes clicking after you won so must be reset
+                                playerButtons[r][c].setDisable(false);
+                                enemyButtons[r][c].setDisable(false);
+                        }
+
+                }
+
+                        title.setText("Place 2 ships (Length 2) on left grid");
+
+                        placeEnemyShips();
         }
         
 }
