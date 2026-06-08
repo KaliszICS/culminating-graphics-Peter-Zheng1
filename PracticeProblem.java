@@ -42,6 +42,7 @@ public class PracticeProblem extends Application {
 
         boolean playerTurn;
         boolean setupMode;
+        boolean placingHorizontal = true;
 
         int shipsPlaced;
 
@@ -91,7 +92,7 @@ public class PracticeProblem extends Application {
         root.setSpacing(15);
         
         //javafx scenes/title
-        Scene scene = new Scene(root, 600, 380);
+        Scene scene = new Scene(root, 650, 400);
         stage.setScene(scene);
         stage.setTitle("BattleShip");
         stage.show();
@@ -229,15 +230,20 @@ public class PracticeProblem extends Application {
         public void placePlayerShip(int row, int col){
                 if (!setupMode) return; // exits if false
 
-                if (playerBoard[row][col] == '~'){
+                if (col + 1 < SIZE && playerBoard[row][col] == '~' && playerBoard[row][col + 1] == '~'){
+
                         playerBoard[row][col] = 'S';
+                        playerBoard[row][col + 1] = 'S';
+
                         playerButtons[row][col].setStyle("-fx-background-color: green;");
+                        playerButtons[row][col + 1].setStyle("-fx-background-color: green;");
+
                         shipsPlaced++;
                 }
 
-                if (shipsPlaced >= 4) {
+                if (shipsPlaced >= 2){
                         setupMode = false;
-                        title.setText("Start attacking!");
+                        title.setText("Start Attacking!");
                 }
 
 
