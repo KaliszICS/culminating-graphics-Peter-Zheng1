@@ -84,10 +84,24 @@ public class PracticeProblem extends Application {
         title.setFont(new Font(16));
 
         Button restartButn = new Button("Restart game");
+                Button rotateButn = new Button("Rotate Ship");
+                rotateButn.setOnAction (e -> {
+                        placingHorizontal = !placingHorizontal;
+                        if (placingHorizontal){
+                                title.setText("Horizontal Placement");
+                        }
+                        else {
+                                title.setText("Vertical Placement");
+                        }
+                });
+
         restartButn.setOnAction(e -> restartGame()); 
         // -> Lambda operator, used for nameless functions, takes input and does action
 
-        VBox root = new VBox(title, boards, restartButn);
+        HBox controls = new HBox(10, restartButn, rotateButn);
+        controls.setAlignment(Pos.CENTER);
+        
+        VBox root = new VBox(title, boards, controls);
         root.setAlignment(Pos.CENTER);
         root.setSpacing(15);
         
@@ -230,15 +244,27 @@ public class PracticeProblem extends Application {
         public void placePlayerShip(int row, int col){
                 if (!setupMode) return; // exits if false
 
-                if (col + 1 < SIZE && playerBoard[row][col] == '~' && playerBoard[row][col + 1] == '~'){
+                if (placingHorizontal) {
+                        if (col + 1 < SIZE && playerBoard[row][col] == '~' && playerBoard[row][col + 1] == '~'){
+                                playerBoard[row][col] = 'S';
+                                playerBoard[row][col + 1]  = 'S';
 
-                        playerBoard[row][col] = 'S';
-                        playerBoard[row][col + 1] = 'S';
+                                playerButtons[row][col].setStyle("-fx-background-color: green;");
+                                playerButtons[row][col + 1].setStyle("-fx-background-color: green;");
 
-                        playerButtons[row][col].setStyle("-fx-background-color: green;");
-                        playerButtons[row][col + 1].setStyle("-fx-background-color: green;");
+                                shipsPlaced++;
+                        }
+                } 
+                else{
+                        if (row + 1 < SIZE && playerBoard[row][col] == '~' && playerBoard[row + 1][col] == '~'){
+                                playerBoard[row][col] = 'S';
+                                playerBoard[row + 1][col] ='S';
 
-                        shipsPlaced++;
+                                playerButtons[row][col].setStyle("-fx-background-color: green;");
+                                playerButtons[row + 1][col].setStyle("-fx-background-color: green;");
+
+                                shipsPlaced++;
+                        }
                 }
 
                 if (shipsPlaced >= 2){
