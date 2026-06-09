@@ -15,7 +15,6 @@
 
 // importing javafx, might add more - temp comment
 import javafx.application.Application;
-import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
@@ -24,45 +23,52 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Font;
+import javafx.scene.input.MouseEvent;
+import javafx.scene.shape.Rectangle;
+import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 
 import java.util.Random;
 
 public class PracticeProblem extends Application {
 
-
-        // Variables
-        int SIZE = 10;
-
-        char[][] playerBoard;
-        char[][] enemyBoard;
-
-        Button[][] playerButtons;
-        Button[][] enemyButtons;
-
-        boolean playerTurn;
-        boolean setupMode;
-        boolean placingHorizontal = true;
-
-        int shipsPlaced;
-
-        Random rand;
-        Label title;
-        GridPane playerGrid;
-        GridPane enemyGrid;
-
-        //starts javafx
-	public static void main(String args[]) {
-
-                launch(args);
-	}
         
-        //------- Start (Game Setup)-------
-        @Override
-      
-        public void start(Stage stage){
+    int SIZE = 10; //board size
 
-        System.out.println("Game Started");
+        // The Game Boards
+    char[][] playerBoard;
+    char[][] enemyBoard;
+
+
+        // Buttons (UI)
+    Button[][] playerButtons;
+    Button[][] enemyButtons;
+        
+    boolean playerTurn;
+    boolean setupMode;
+    boolean placingHorizontal = true;
+
+    int shipsPlaced;
+
+    Random rand;
+    Label title;
+
+    GridPane playerGrid;
+    GridPane enemyGrid;
+
+    Rectangle shipPreview;
+
+    int shipLength = 2;
+
+
+        // launching
+    public static void main(String args[]) {
+        launch(args);
+    }
+
+        // Starting Game
+    @Override
+    public void start(Stage stage) {
 
         playerBoard = new char[SIZE][SIZE];
         enemyBoard = new char[SIZE][SIZE];
@@ -77,268 +83,302 @@ public class PracticeProblem extends Application {
         shipsPlaced = 0;
 
         initializeBoards();
-        
+
         HBox boards = createGrid();
 
-        title = new Label("Place 2 Ships (Length 2) on the left grid");
+        title = new Label("Drag ship onto your board (2 ships)");
         title.setFont(new Font(16));
 
-        Button restartButn = new Button("Restart game");
-                Button rotateButn = new Button("Rotate Ship");
-                rotateButn.setOnAction (e -> {
-                        placingHorizontal = !placingHorizontal;
-                        if (placingHorizontal){
-                                title.setText("Horizontal Placement");
-                        }
-                        else {
-                                title.setText("Vertical Placement");
-                        }
-                });
 
-        restartButn.setOnAction(e -> restartGame()); 
-        // -> Lambda operator, used for nameless functions, takes input and does action
+                // Ship Preview
+                                        // the draggable ship
+        shipPreview = new Rectangle(80, 40);
+        shipPreview.setFill(Color.GREEN);
+
+                // dragging
+        shipPreview.setOnMouseDragged(this::dragShip);
+
+                //dropping
+        shipPreview.setOnMouseReleased(this::dropShip);
+
+
+                //Buttons
+        Button restartButn = new Button("Restart game");
+        Button rotateButn = new Button("Rotate Ship");
+
+                // rotatation (horizontal/vertical)
+        rotateButn.setOnAction(e -> {
+            placingHorizontal = !placingHorizontal;
+
+            if (placingHorizontal) {
+                shipPreview.setWidth(80);
+                shipPreview.setHeight(40);
+                title.setText("Horizontal Ship");
+            } else {
+                shipPreview.setWidth(40);
+                shipPreview.setHeight(80);
+                title.setText("Vertical Ship");
+            }
+        });
+                // restarts/resets everything 
+        restartButn.setOnAction(e -> restartGame());
 
         HBox controls = new HBox(10, restartButn, rotateButn);
         controls.setAlignment(Pos.CENTER);
-        
-        VBox root = new VBox(title, boards, controls);
+
+        VBox root = new VBox(title, shipPreview, boards, controls);
         root.setAlignment(Pos.CENTER);
         root.setSpacing(15);
-        
-        //javafx scenes/title
-        Scene scene = new Scene(root, 650, 400);
+
+        Scene scene = new Scene(root, 650, 500);
         stage.setScene(scene);
         stage.setTitle("BattleShip");
         stage.show();
-
+        
+        //places enemy ships at the start
         placeEnemyShips();
+    }
+
+    // ------------- the grid -------------
+
+    public HBox createGrid() {
+
+        playerGrid = new GridPane();
+        enemyGrid = new GridPane();
+
+        playerGrid.setHgap(2);
+        playerGrid.setVgap(2);
+
+        enemyGrid.setHgap(2);
+        enemyGrid.setVgap(2);
+
+        for (int r = 0; r < SIZE; r++) {
+            for (int c = 0; c < SIZE; c++) {
+
+                // player grid
+                Button p = new Button();
+                p.setPrefSize(40, 40);
+                playerButtons[r][c] = p;
+                playerGrid.add(p, c, r);
+
+                // enemy grid
+                Button e = new Button();
+                e.setPrefSize(40, 40);
+
+                int row = r;
+                int col = c;
+
+                //clicking enemy grid (attack)
+                e.setOnAction(ev -> attackEnemy(row, col));
+
+                enemyButtons[r][c] = e;
+                enemyGrid.add(e, c, r);
+            }
         }
 
-        //------- Methods-------
+        VBox left = new VBox(new Label("YOUR BOARD"), playerGrid);
+        VBox right = new VBox(new Label("ENEMY BOARD"), enemyGrid);
 
-        public HBox createGrid(){
+        left.setAlignment(Pos.CENTER);
+        right.setAlignment(Pos.CENTER);
 
-                playerGrid = new GridPane();
-                enemyGrid = new GridPane();
+        return new HBox(50, left, right);
+    }
 
-                playerGrid.setHgap(2);
-                playerGrid.setVgap(2);
+        // initalizing boards
+        public void initializeBoards() {
+        for (int r = 0; r < SIZE; r++)
+            for (int c = 0; c < SIZE; c++) {
+                playerBoard[r][c] = '~';
+                enemyBoard[r][c] = '~';
+            }
+    }
 
-                enemyGrid.setHgap(2);
-                enemyGrid.setVgap(2);
+    // ------------- dragging & dropping ships -------------
+    
+    //ships follow mouse
+    public void dragShip(MouseEvent e) {
+        shipPreview.setLayoutX(e.getSceneX() - 20);
+        shipPreview.setLayoutY(e.getSceneY() - 20);
+    }
 
-                // Player grid
-                for (int r = 0; r < SIZE; r++){
-                        for (int c = 0; c < SIZE; c++ ){
-                                Button butn = new Button();
-                                butn.setPrefSize(40, 40);
+    //places ship from mouse position
+    public void dropShip(MouseEvent e) {
 
-                                int row = r;
-                                int col = c;
+        if (!setupMode) return;
 
-                                butn.setOnAction(e -> placePlayerShip(row, col));
+        int col = (int)((e.getSceneX() - playerGrid.getLayoutX()) / 42);
+        int row = (int)((e.getSceneY() - playerGrid.getLayoutY()) / 42);
 
-                                playerButtons[r][c] = butn;
-                                playerGrid.add(butn, c, r);
-                        }
-                }
+        if (row < 0 || col < 0 || row >= SIZE || col >= SIZE) return;
 
-                // Enemy grid
-                for (int r = 0; r < SIZE; r++){
-                        for (int c = 0; c < SIZE; c++){
+        if (canPlace(row, col)) {
+            placeShip(row, col);
+        }
+    }
+        // ship placement validation
+    public boolean canPlace(int row, int col) {
 
-                                Button butn = new Button();
-                                butn.setPrefSize(40, 40);
-
-                                int row = r;
-                                int col = c;
-
-                                butn.setOnAction(e -> attackEnemy(row, col));
-
-                                enemyButtons[r][c] = butn;
-                                enemyGrid.add(butn, c, r);
-                        }
-                }
-                VBox left = new VBox(new Label("YOUR BOARD"), playerGrid);
-                VBox right = new VBox(new Label("ENEMY BOARD"), enemyGrid);
-
-                left.setAlignment(Pos.CENTER);
-                right.setAlignment(Pos.CENTER);
-
-                return new HBox(50, left, right);
+        if (placingHorizontal) {
+            if (col + shipLength > SIZE) return false;
+            for (int i = 0; i < shipLength; i++)
+                if (playerBoard[row][col + i] != '~') return false;
+        } else {
+            if (row + shipLength > SIZE) return false;
+            for (int i = 0; i < shipLength; i++)
+                if (playerBoard[row + i][col] != '~') return false;
         }
 
+        return true;
+    }
 
-        //------- Initialize-------
-        public void initializeBoards(){
-                for (int r = 0; r < SIZE; r++){
-                        for (int c = 0; c < SIZE; c++){
-                                playerBoard[r][c] = '~';
-                                enemyBoard[r][c] = '~';
-                        }
-                }
-        }
-                
-        // ------- player attacking ---------
-        public void attackEnemy(int row, int col){
+        // placing ship
+    public void placeShip(int row, int col) {
 
-                if (setupMode) return; // if its still in setup mode, stop.
-                if (!playerTurn) return; // if not playerturn, stop.
+        for (int i = 0; i < shipLength; i++) {
 
-                if (enemyBoard[row][col] == 'X' || enemyBoard[row][col] == 'O') return; // if
-                //  theres a x or 0 stop.
-
-                if (enemyBoard[row][col] == 'S') {
-                        enemyBoard[row][col] = 'X';
-                        enemyButtons[row][col].setText("X");
-                        enemyButtons[row][col].setStyle("-fx-background-color: red;"); // hit
-                }
-
-                else {
-                        enemyBoard[row][col] = 'O';
-                        enemyButtons[row][col].setText("O");
-                        enemyButtons[row][col].setStyle("-fx-background-color: lightblue;"); // miss
-                }
-
-                if (checkWin(enemyBoard)) {
-                        showWin("You win!");
-                        return;
-                }
-                
-                playerTurn = false;
-                enemyAttack();
-                
-
+            if (placingHorizontal) {
+                playerBoard[row][col + i] = 'S';
+                playerButtons[row][col + i].setStyle("-fx-background-color: green;");
+            } else {
+                playerBoard[row + i][col] = 'S';
+                playerButtons[row + i][col].setStyle("-fx-background-color: green;");
+            }
         }
 
-        public void enemyAttack(){
-                if (setupMode) return;
-                int row;
-                int col;
+        shipsPlaced++;
 
-                do { // picks random tile (not picked before)
-                        row = rand.nextInt(SIZE);
-                        col = rand.nextInt(SIZE);
-                } while (playerBoard[row][col] == 'X' || playerBoard[row][col] == 'O');
-
-                if (playerBoard[row][col] == 'S'){
-                        playerBoard[row][col] = 'X';
-                        playerButtons[row][col].setText("X");
-                        playerButtons[row][col].setStyle("-fx-background-color: red;");
-                }
-
-                else {
-                        playerBoard[row][col] = 'O';
-                        playerButtons[row][col].setText("O");
-                        playerButtons[row][col].setStyle("-fx-background-color: lightblue;");
-                }
-
-                if (checkWin(playerBoard)) {
-                        showWin("Enemy has won!");
-                        return;
-                }
-                playerTurn = true;
+        if (shipsPlaced >= 2) {
+            setupMode = false;
+            title.setText("Start attacking!");
+            shipPreview.setVisible(false);
+            placeEnemyShips();
+        } else {
+            title.setText("Ships placed: " + shipsPlaced + "/2");
         }
-        
+    }
 
-        public void placePlayerShip(int row, int col){
-                if (!setupMode) return; // exits if false
+    // ------------- the game -------------
 
-                if (placingHorizontal) {
-                        if (col + 1 < SIZE && playerBoard[row][col] == '~' && playerBoard[row][col + 1] == '~'){
-                                playerBoard[row][col] = 'S';
-                                playerBoard[row][col + 1]  = 'S';
+        // player attacking
+    public void attackEnemy(int row, int col) {
 
-                                playerButtons[row][col].setStyle("-fx-background-color: green;");
-                                playerButtons[row][col + 1].setStyle("-fx-background-color: green;");
+        if (setupMode || !playerTurn) return;
 
-                                shipsPlaced++;
-                        }
-                } 
-                else{
-                        if (row + 1 < SIZE && playerBoard[row][col] == '~' && playerBoard[row + 1][col] == '~'){
-                                playerBoard[row][col] = 'S';
-                                playerBoard[row + 1][col] ='S';
+        if (enemyBoard[row][col] == 'X' || enemyBoard[row][col] == 'O') return;
 
-                                playerButtons[row][col].setStyle("-fx-background-color: green;");
-                                playerButtons[row + 1][col].setStyle("-fx-background-color: green;");
-
-                                shipsPlaced++;
-                        }
-                }
-
-                if (shipsPlaced >= 2){
-                        setupMode = false;
-                        title.setText("Start Attacking!");
-                }
-
-
-        }
-                public void placeEnemyShips(){  // placing enemy ships (randomized)
-                int count = 0;
-                while (count < 4){
-                        int r = rand.nextInt(SIZE);
-                        int c = rand.nextInt(SIZE);
-
-                        if (enemyBoard[r][c] == '~'){
-                                enemyBoard[r][c] = 'S';
-                                count++;
-                        }
-                }
+        if (enemyBoard[row][col] == 'S') {
+            enemyBoard[row][col] = 'X';
+            enemyButtons[row][col].setText("X");
+            enemyButtons[row][col].setStyle("-fx-background-color: red;");
+        } else {
+            enemyBoard[row][col] = 'O';
+            enemyButtons[row][col].setText("O");
+            enemyButtons[row][col].setStyle("-fx-background-color: lightblue;");
         }
 
-        public boolean checkWin(char[][] board){ // checking if the player/enemy has won the game 
-                for (int r = 0; r < SIZE; r++){
-                        for (int c = 0; c < SIZE; c++){
-                                if (board[r][c] =='S'){
-                                        return false;
-                                }
-                        }
-                }
-                return true;
+        if (checkWin(enemyBoard)) {
+            showWin("You win!");
+            return;
         }
 
-        public void showWin(String message){ //Showing that the player won
-                title.setText(message);
+        playerTurn = false;
+        enemyAttack();
+    }
 
-                for (int r = 0; r < SIZE; r++){
-                        for (int c = 0; c < SIZE; c++){
-                                playerButtons[r][c].setDisable(true);
-                                enemyButtons[r][c].setDisable(true);
-                        }
-                }
-                        
+        //enemy attacking
+    public void enemyAttack() {
+
+        int r, c;
+
+        do {
+            r = rand.nextInt(SIZE);
+            c = rand.nextInt(SIZE);
+        } while (playerBoard[r][c] == 'X' || playerBoard[r][c] == 'O');
+
+        if (playerBoard[r][c] == 'S') {
+            playerBoard[r][c] = 'X';
+            playerButtons[r][c].setText("X");
+            playerButtons[r][c].setStyle("-fx-background-color: red;");
+        } else {
+            playerBoard[r][c] = 'O';
+            playerButtons[r][c].setText("O");
+            playerButtons[r][c].setStyle("-fx-background-color: lightblue;");
         }
 
-          public void restartGame(){ // restarts game
-                setupMode = true;
-                playerTurn = true;
-                shipsPlaced = 0;
-
-                playerBoard = new char[SIZE][SIZE];
-                enemyBoard = new char[SIZE][SIZE];
-
-                initializeBoards();
-
-                //resets text on buttons &  colors & styles (i.e: removes green, red, and blue)
-                for (int r = 0; r < SIZE; r++){
-                        for (int c = 0; c < SIZE; c++){
-                                playerButtons[r][c].setText("");
-                                playerButtons[r][c].setStyle("");
-
-                                enemyButtons[r][c].setText("");
-                                enemyButtons[r][c].setStyle("");
-
-                                //enables clicking again - removes clicking after you won so must be reset
-                                playerButtons[r][c].setDisable(false);
-                                enemyButtons[r][c].setDisable(false);
-                        }
-
-                }
-
-                        title.setText("Place 2 ships (Length 2) on left grid");
-
-                        placeEnemyShips();
+        if (checkWin(playerBoard)) {
+            showWin("Enemy wins!");
+            return;
         }
-        
+
+        playerTurn = true;
+    }
+
+    // ------------- enemy -------------
+
+    public void placeEnemyShips() {
+
+        int count = 0;
+
+        while (count < 4) {
+            int r = rand.nextInt(SIZE);
+            int c = rand.nextInt(SIZE);
+
+            if (enemyBoard[r][c] == '~') {
+                enemyBoard[r][c] = 'S';
+                count++;
+            }
+        }
+    }
+
+    // ------------- checking win/showing win -------------
+
+    public boolean checkWin(char[][] board) {
+
+        for (int r = 0; r < SIZE; r++)
+            for (int c = 0; c < SIZE; c++)
+                if (board[r][c] == 'S') return false;
+
+        return true;
+    }
+
+    // shows win screen
+    public void showWin(String msg) {
+        title.setText(msg);
+
+        for (int r = 0; r < SIZE; r++)
+            for (int c = 0; c < SIZE; c++) {
+                playerButtons[r][c].setDisable(true);
+                enemyButtons[r][c].setDisable(true);
+            }
+    }
+
+    // ------------- resetting the game -------------
+
+    public void restartGame() {
+
+        setupMode = true;
+        playerTurn = true;
+        shipsPlaced = 0;
+
+        playerBoard = new char[SIZE][SIZE];
+        enemyBoard = new char[SIZE][SIZE];
+
+        initializeBoards();
+
+        for (int r = 0; r < SIZE; r++)
+            for (int c = 0; c < SIZE; c++) {
+                playerButtons[r][c].setText("");
+                playerButtons[r][c].setStyle("");
+                playerButtons[r][c].setDisable(false);
+
+                enemyButtons[r][c].setText("");
+                enemyButtons[r][c].setStyle("");
+                enemyButtons[r][c].setDisable(false);
+            }
+
+        shipPreview.setVisible(true);
+        title.setText("Drag ship onto your board");
+    }
+
 }
