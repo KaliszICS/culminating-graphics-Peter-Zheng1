@@ -1,20 +1,22 @@
 /**
+ *
+ *        * File: Culminating Assignment | Battleship
+ *
+ *        * Author: Peter Zheng
+ *
+ *        * Date Created: May 26, 2026
+ *
+ *        * Date Last Modified: June 3, 2026
+ *
+ */
 
-        * File: Culminating Assignment | Battleship
-
-        * Author: Peter Zheng
-
-        * Date Created: May 26, 2026
-
-        * Date Last Modified: June 3, 2026
-
-        */
-                        // IMPORTANT NOTE: PREVIOUS UPDATES WERE DONE ON "CULMINATING" Assingment.
-                        // Instead of the "CULMINATING-GRAPHICS" Assignment. 
-                        // New updates will be done on this assignment 
+// IMPORTANT NOTE: PREVIOUS UPDATES WERE DONE ON "CULMINATING" Assingment.
+// Instead of the "CULMINATING-GRAPHICS" Assignment. 
+// New updates will be done on this assignment 
 
 // importing javafx, might add more - temp comment
 import javafx.application.Application;
+import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
@@ -32,18 +34,16 @@ import java.util.Random;
 
 public class PracticeProblem extends Application {
 
-        
     int SIZE = 10; //board size
 
-        // The Game Boards
+    // The Game Boards
     char[][] playerBoard;
     char[][] enemyBoard;
 
-
-        // Buttons (UI)
+    // Buttons (UI)
     Button[][] playerButtons;
     Button[][] enemyButtons;
-        
+
     boolean playerTurn;
     boolean setupMode;
     boolean placingHorizontal = true;
@@ -60,13 +60,12 @@ public class PracticeProblem extends Application {
 
     int shipLength = 2;
 
-
-        // launching
+    // launching
     public static void main(String args[]) {
         launch(args);
     }
 
-        // Starting Game
+    // Starting Game
     @Override
     public void start(Stage stage) {
 
@@ -89,24 +88,22 @@ public class PracticeProblem extends Application {
         title = new Label("Drag ship onto your board (2 ships)");
         title.setFont(new Font(16));
 
-
-                // Ship Preview
-                                        // the draggable ship
+        // Ship Preview
+        // the draggable ship
         shipPreview = new Rectangle(80, 40);
         shipPreview.setFill(Color.GREEN);
 
-                // dragging
+        // dragging
         shipPreview.setOnMouseDragged(this::dragShip);
 
-                //dropping
+        //dropping
         shipPreview.setOnMouseReleased(this::dropShip);
 
-
-                //Buttons
+        //Buttons
         Button restartButn = new Button("Restart game");
         Button rotateButn = new Button("Rotate Ship");
 
-                // rotatation (horizontal/vertical)
+        // rotatation (horizontal/vertical)
         rotateButn.setOnAction(e -> {
             placingHorizontal = !placingHorizontal;
 
@@ -120,7 +117,8 @@ public class PracticeProblem extends Application {
                 title.setText("Vertical Ship");
             }
         });
-                // restarts/resets everything 
+
+        // restarts/resets everything 
         restartButn.setOnAction(e -> restartGame());
 
         HBox controls = new HBox(10, restartButn, rotateButn);
@@ -129,12 +127,13 @@ public class PracticeProblem extends Application {
         VBox root = new VBox(title, shipPreview, boards, controls);
         root.setAlignment(Pos.CENTER);
         root.setSpacing(15);
+        root.setPadding(new Insets(20));
 
-        Scene scene = new Scene(root, 650, 500);
+        Scene scene = new Scene(root, 900, 550);
         stage.setScene(scene);
         stage.setTitle("BattleShip");
         stage.show();
-        
+
         //places enemy ships at the start
         placeEnemyShips();
     }
@@ -146,11 +145,11 @@ public class PracticeProblem extends Application {
         playerGrid = new GridPane();
         enemyGrid = new GridPane();
 
-        playerGrid.setHgap(2);
-        playerGrid.setVgap(2);
+        playerGrid.setHgap(0);
+        playerGrid.setVgap(0);
 
-        enemyGrid.setHgap(2);
-        enemyGrid.setVgap(2);
+        enemyGrid.setHgap(0);
+        enemyGrid.setVgap(0);
 
         for (int r = 0; r < SIZE; r++) {
             for (int c = 0; c < SIZE; c++) {
@@ -185,8 +184,8 @@ public class PracticeProblem extends Application {
         return new HBox(50, left, right);
     }
 
-        // initalizing boards
-        public void initializeBoards() {
+    // initalizing boards
+    public void initializeBoards() {
         for (int r = 0; r < SIZE; r++)
             for (int c = 0; c < SIZE; c++) {
                 playerBoard[r][c] = '~';
@@ -195,7 +194,7 @@ public class PracticeProblem extends Application {
     }
 
     // ------------- dragging & dropping ships -------------
-    
+
     //ships follow mouse
     public void dragShip(MouseEvent e) {
         shipPreview.setLayoutX(e.getSceneX() - 20);
@@ -207,16 +206,19 @@ public class PracticeProblem extends Application {
 
         if (!setupMode) return;
 
-        int col = (int)((e.getSceneX() - playerGrid.getLayoutX()) / 42);
-        int row = (int)((e.getSceneY() - playerGrid.getLayoutY()) / 42);
+        int col = (int)((e.getSceneX() - playerGrid.localToScene(0,0).getX()) / 40); // fixes ship dragging placement
+        int row = (int)((e.getSceneY() - playerGrid.localToScene(0,0).getY()) / 40); // fixes ship dragging placement
 
         if (row < 0 || col < 0 || row >= SIZE || col >= SIZE) return;
 
         if (canPlace(row, col)) {
             placeShip(row, col);
+        } else {
+            title.setText("Invalid placement!");
         }
     }
-        // ship placement validation
+
+    // ship placement validation
     public boolean canPlace(int row, int col) {
 
         if (placingHorizontal) {
@@ -232,7 +234,7 @@ public class PracticeProblem extends Application {
         return true;
     }
 
-        // placing ship
+    // placing ship
     public void placeShip(int row, int col) {
 
         for (int i = 0; i < shipLength; i++) {
@@ -252,7 +254,7 @@ public class PracticeProblem extends Application {
             setupMode = false;
             title.setText("Start attacking!");
             shipPreview.setVisible(false);
-            placeEnemyShips();
+            enemyGrid.setDisable(false);
         } else {
             title.setText("Ships placed: " + shipsPlaced + "/2");
         }
@@ -260,7 +262,7 @@ public class PracticeProblem extends Application {
 
     // ------------- the game -------------
 
-        // player attacking
+    // player attacking
     public void attackEnemy(int row, int col) {
 
         if (setupMode || !playerTurn) return;
@@ -286,7 +288,7 @@ public class PracticeProblem extends Application {
         enemyAttack();
     }
 
-        //enemy attacking
+    //enemy attacking
     public void enemyAttack() {
 
         int r, c;
@@ -318,17 +320,45 @@ public class PracticeProblem extends Application {
 
     public void placeEnemyShips() {
 
-        int count = 0;
+        int shipsToPlace = 2;
+        int shipLength = 2;
 
-        while (count < 4) {
-            int r = rand.nextInt(SIZE);
-            int c = rand.nextInt(SIZE);
+        int placed = 0;
 
-            if (enemyBoard[r][c] == '~') {
-                enemyBoard[r][c] = 'S';
-                count++;
+        while (placed < shipsToPlace) {
+
+            boolean horizontal = rand.nextBoolean();
+            int row = rand.nextInt(SIZE);
+            int col = rand.nextInt(SIZE);
+
+            if (!canPlaceEnemyShip(row, col, horizontal, shipLength)) continue;
+
+            for (int i = 0; i < shipLength; i++) {
+
+                if (horizontal) {
+                    enemyBoard[row][col + i] = 'S';
+                    //enemyButtons[row][col + i].setStyle("-fx-background-color: gray;"); - debugging purpose (shows enemy ship)
+                } else {
+                    enemyBoard[row + i][col] = 'S';
+                    //enemyButtons[row + i][col].setStyle("-fx-background-color: gray;"); - debugging purpose (shows enemy ship)
+                }
             }
+
+            placed++;
         }
+    }
+
+    public boolean canPlaceEnemyShip(int row, int col, boolean horizontal, int length) {
+        if (horizontal) {
+            if (col + length > SIZE) return false;
+            for (int i = 0; i < length; i++)
+                if (enemyBoard[row][col + i] != '~') return false;
+        } else {
+            if (row + length > SIZE) return false;
+            for (int i = 0; i < length; i++)
+                if (enemyBoard[row + i][col] != '~') return false;
+        }
+        return true;
     }
 
     // ------------- checking win/showing win -------------
@@ -380,5 +410,4 @@ public class PracticeProblem extends Application {
         shipPreview.setVisible(true);
         title.setText("Drag ship onto your board");
     }
-
 }
