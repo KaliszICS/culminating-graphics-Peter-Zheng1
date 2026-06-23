@@ -1,0 +1,9 @@
+K(30%): 100
+I(30%): 85
+C(10%): 100
+A(30%): 85
+91%
+
+The whole board changes when you change orientation of ship. These should be separate so they don't flex based on each other.
+
+When you restart the game you need to restart everything. When you restart, you automatically when on the following move.
